@@ -15,7 +15,6 @@ import {
   Image as ImageIcon,
   Instagram,
   MapPin,
-  Menu,
   Music2,
   Pause,
   Play,
@@ -166,15 +165,13 @@ function Cover({ guest, onOpen }: { guest: string; onOpen: () => void }) {
 }
 
 function Header({ openMusic, musicOn }: { openMusic: () => void; musicOn: boolean }) {
-  const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => { const listener = () => setScrolled(window.scrollY > 32); window.addEventListener("scroll", listener, { passive: true }); return () => window.removeEventListener("scroll", listener); }, []);
-  const go = (id: string) => { document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); setMenuOpen(false); };
+  const go = (id: string) => { document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });  };
   return <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
     <a className="header-brand" href="#intro" aria-label="Kembali ke awal"><Mark /><span>{CONFIG.shortNames}</span></a>
     <nav className="desktop-nav" aria-label="Navigasi utama">{navItems.map((item) => <button key={item.id} onClick={() => go(item.id)}>{item.label}</button>)}</nav>
-    <div className="header-actions"><button className="music-mini" onClick={openMusic} aria-label={musicOn ? "Matikan musik" : "Nyalakan musik"}><Music2 size={15} /><span>{musicOn ? "Musik on" : "Musik off"}</span></button><button className="menu-button" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? "Tutup menu" : "Buka menu"} aria-expanded={menuOpen}>{menuOpen ? <X size={21} /> : <Menu size={21} />}</button></div>
-    {menuOpen && <nav className="mobile-menu" aria-label="Navigasi mobile">{navItems.map((item, index) => <button key={item.id} style={{ "--i": index } as React.CSSProperties} onClick={() => go(item.id)}><span>0{index + 2}</span>{item.label}<ArrowDownRight size={16} /></button>)}</nav>}
+    <div className="header-actions"><button className="music-mini" onClick={openMusic} aria-label={musicOn ? "Matikan musik" : "Nyalakan musik"}><Music2 size={15} /><span>{musicOn ? "Musik on" : "Musik off"}</span></button></div>
   </header>;
 }
 
@@ -252,13 +249,24 @@ export default function Home() {
   const finishLoading = () => setLoading(false);
   useEffect(() => { try { const saved = localStorage.getItem("raka-anjani-guestbook"); if (saved) setEntries(JSON.parse(saved)); } catch { /* ignore unavailable storage */ } }, []);
   useEffect(() => { document.body.classList.toggle("invite-locked", !opened); return () => document.body.classList.remove("invite-locked"); }, [opened]);
-  const openInvitation = () => { setOpened(true); window.setTimeout(() => document.getElementById("intro")?.scrollIntoView({ behavior: "smooth" }), 300); };
+  useEffect(() => {
+    if (!opened) return;
+    const targets = document.querySelectorAll<HTMLElement>("main .section-kicker, main h2, main p, main img, main .event-item, main .gift-account, main .gallery-tile, main .event-actions, main .countdown-values");
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced || !("IntersectionObserver" in window)) { targets.forEach((node) => node.classList.add("is-visible")); return; }
+    const observer = new IntersectionObserver((items) => { items.forEach((item) => { if (item.isIntersecting) { item.target.classList.add("is-visible"); observer.unobserve(item.target); } }); }, { threshold: 0.14, rootMargin: "0px 0px -8% 0px" });
+    targets.forEach((node, index) => { node.dataset.reveal = index % 4 === 1 ? "left" : index % 4 === 2 ? "right" : "up"; node.style.setProperty("--reveal-delay", `${Math.min(index % 5, 4) * 55}ms`); observer.observe(node); });
+    return () => observer.disconnect();
+  }, [opened]);
+  const startMusic = () => { const audio = audioRef.current; if (!audio) return; audio.play().then(() => setMusicOn(true)).catch(() => setMusicOn(false)); };
+  const openInvitation = () => { setOpened(true); startMusic(); window.setTimeout(() => document.getElementById("intro")?.scrollIntoView({ behavior: "smooth" }), 300); };
   const submitEntry = (entry: GuestbookEntry) => { const next = [entry, ...entries]; setEntries(next); try { localStorage.setItem("raka-anjani-guestbook", JSON.stringify(next)); } catch { /* storage is optional */ } };
   const toggleMusic = () => { if (!audioRef.current) return; if (musicOn) { audioRef.current.pause(); setMusicOn(false); } else { audioRef.current.play().then(() => setMusicOn(true)).catch(() => setMusicOn(false)); } };
   return <>
+    <audio ref={audioRef} src={CONFIG.ambientTrack} loop preload="none" aria-hidden="true" />
     {loading && <Preloader onDone={finishLoading} />}
     {!opened && !loading && <Cover guest={guest} onOpen={openInvitation} />}
-    {opened && <div className="invitation-page"><audio ref={audioRef} src={CONFIG.ambientTrack} loop preload="none" aria-hidden="true" /><Header openMusic={toggleMusic} musicOn={musicOn} /><main><Intro /><Story /><Events /><Countdown /><Gallery onSelect={setLightboxIndex} /><Rsvp onSubmitted={submitEntry} /><Guestbook entries={entries} /><Gift /></main><footer className="site-footer"><Mark light /><p>Terima kasih telah menjadi<br /><em>bagian dari hari kami.</em></p><div><span>{CONFIG.shortNames}</span><span>{CONFIG.dateLabel}</span></div><a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram"><Instagram size={17} /></a></footer><MusicToggle musicOn={musicOn} onToggle={toggleMusic} /><nav className="mobile-bottom-nav" aria-label="Navigasi cepat">{navItems.slice(0, 4).map((item) => <button key={item.id} onClick={() => document.getElementById(item.id)?.scrollIntoView({ behavior: "smooth" })}><span>{item.id === "story" ? "01" : item.id === "events" ? "02" : item.id === "gallery" ? "03" : "04"}</span>{item.label}</button>)}</nav></div>}
+    {opened && <div className="invitation-page"><Header openMusic={toggleMusic} musicOn={musicOn} /><main><Intro /><Story /><Events /><Countdown /><Gallery onSelect={setLightboxIndex} /><Rsvp onSubmitted={submitEntry} /><Guestbook entries={entries} /><Gift /></main><footer className="site-footer"><Mark light /><p>Terima kasih telah menjadi<br /><em>bagian dari hari kami.</em></p><div><span>{CONFIG.shortNames}</span><span>{CONFIG.dateLabel}</span></div><a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram"><Instagram size={17} /></a></footer><MusicToggle musicOn={musicOn} onToggle={toggleMusic} /><nav className="mobile-bottom-nav" aria-label="Navigasi cepat">{navItems.slice(0, 4).map((item) => <button key={item.id} onClick={() => document.getElementById(item.id)?.scrollIntoView({ behavior: "smooth" })}><span>{item.id === "story" ? "01" : item.id === "events" ? "02" : item.id === "gallery" ? "03" : "04"}</span>{item.label}</button>)}</nav></div>}
     {lightboxIndex !== null && <Lightbox index={lightboxIndex} onClose={() => setLightboxIndex(null)} onChange={setLightboxIndex} />}
   </>;
 }

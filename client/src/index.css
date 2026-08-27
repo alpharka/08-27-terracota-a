@@ -113,3 +113,21 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .cover-brand-anchor { align-items: center; color: #f3dfcf; display: flex; gap: 1rem; left: max(1.5rem, calc((100vw - 1180px) / 2)); position: absolute; top: 5.4rem; }.cover-brand-anchor .mark { color: #df9a78; height: 48px; width: 48px; }.cover-brand-anchor .mark::before { height: 42px; width: 42px; }.cover-brand-anchor .mark-shape { font-size: 21px; }.cover-brand-anchor .mark-shape-a { left: 10px; top: 7px; }.cover-brand-anchor .mark-shape-b { bottom: 7px; right: 9px; }.cover-brand-anchor > span { font-size: .6rem; font-weight: 800; letter-spacing: .16em; }
 .cover-paper-panel { align-items: center; background: var(--paper); bottom: 5.1rem; color: var(--ink); display: flex; gap: .9rem; padding: .85rem 1rem; position: absolute; right: max(1.5rem, calc((100vw - 1180px) / 2)); transform: rotate(-2deg); width: 285px; }.cover-paper-panel > div:nth-child(2) { display: flex; flex-direction: column; gap: .12rem; }.cover-paper-panel > div:nth-child(2) > span { color: var(--terracotta-dark); font-size: .54rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }.cover-paper-panel strong { font-family: 'DM Serif Display', serif; font-size: 1.05rem; font-weight: 400; line-height: 1.1; }.cover-paper-panel small { color: #6d7477; font-size: .58rem; line-height: 1.35; }.cover-paper-panel > svg { color: var(--terracotta); margin-left: auto; }.paper-panel-stamp { align-items: center; border: 1px solid var(--terracotta); border-radius: 50%; color: var(--terracotta); display: flex; flex: 0 0 43px; flex-direction: column; font-size: .72rem; font-weight: 800; height: 43px; justify-content: center; line-height: .85; text-align: center; }.paper-panel-stamp span { font-size: .52rem; }
 @media (max-width: 800px) { .cover-brand-anchor { left: 1.35rem; top: 5rem; }.cover-paper-panel { bottom: 4.3rem; left: 1.35rem; right: auto; transform: rotate(-1deg); width: min(285px, calc(100% - 2.7rem)); }.cover-note { display: none; } }
+
+
+/* REVISION — Scroll reveal follows the invitation's page-turn rhythm: text and images rise, drift left, or drift right into place. */
+@media (prefers-reduced-motion: no-preference) {
+  main [data-reveal] { opacity: 0; transform: translate3d(0, 26px, 0); transition: opacity .7s var(--ease-out), transform .7s var(--ease-out); transition-delay: var(--reveal-delay, 0ms); will-change: opacity, transform; }
+  main [data-reveal="left"] { transform: translate3d(-28px, 0, 0); }
+  main [data-reveal="right"] { transform: translate3d(28px, 0, 0); }
+  main [data-reveal].is-visible { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+/* Keep the venue note in its own safe area, below the cover copy rather than over the invitation CTA. */
+.cover-paper-panel { bottom: 2.2rem; }
+.cover-copy { padding-bottom: 2.5rem; }
+@media (max-width: 800px) {
+  .menu-button, .mobile-menu { display: none !important; }
+  .cover-copy { padding-bottom: 8.5rem; }
+  .cover-paper-panel { bottom: 1.25rem; }
+}

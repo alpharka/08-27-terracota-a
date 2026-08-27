@@ -43,7 +43,7 @@ const CONFIG = {
   accountNumber: "14000 2900 889",
   accountName: "Raka Pradipta",
   paymentLink: "https://contoh-pembayaran.test",
-  ambientTrack: "https://cdn.pixabay.com/audio/2022/10/25/audio_946a6a07f7.mp3",
+  ambientTrack: "https://www.youtube.com/embed/vgufOxMfxPQ?enablejsapi=1&autoplay=1&mute=1&playsinline=1&controls=0&loop=1&playlist=vgufOxMfxPQ",
 };
 
 type GuestbookEntry = {
@@ -158,7 +158,7 @@ function Cover({ guest, onOpen }: { guest: string; onOpen: () => void }) {
         <p className="cover-date">{CONFIG.dateLabel} <span>·</span> Yogyakarta</p>
         <button className="open-button" onClick={onOpen}><span>Buka Undangan</span><ArrowDownRight size={17} /></button>
       </div>
-      <div className="cover-paper-panel"><div className="paper-panel-stamp">RA<br /><span>26</span></div><div><span>Lokasi perayaan</span><strong>{CONFIG.venue}</strong><small>{CONFIG.address}</small></div><ArrowDownRight size={18} /></div>
+      
       <p className="cover-note">Geser untuk membuka cerita <ChevronDown size={15} /></p>
     </div>
   </section>;
@@ -244,8 +244,9 @@ export default function Home() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [musicOn, setMusicOn] = useState(false);
   const [entries, setEntries] = useState<GuestbookEntry[]>([]);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioRef = useRef<HTMLIFrameElement | null>(null);
   const guest = useMemo(getGuestName, []);
+  const sendYoutubeCommand = (func: string) => { audioRef.current?.contentWindow?.postMessage(JSON.stringify({ event: "command", func, args: [] }), "*"); };
   const finishLoading = () => setLoading(false);
   useEffect(() => { try { const saved = localStorage.getItem("raka-anjani-guestbook"); if (saved) setEntries(JSON.parse(saved)); } catch { /* ignore unavailable storage */ } }, []);
   useEffect(() => { document.body.classList.toggle("invite-locked", !opened); return () => document.body.classList.remove("invite-locked"); }, [opened]);
@@ -258,12 +259,13 @@ export default function Home() {
     targets.forEach((node, index) => { node.dataset.reveal = index % 4 === 1 ? "left" : index % 4 === 2 ? "right" : "up"; node.style.setProperty("--reveal-delay", `${Math.min(index % 5, 4) * 55}ms`); observer.observe(node); });
     return () => observer.disconnect();
   }, [opened]);
-  const startMusic = () => { const audio = audioRef.current; if (!audio) return; audio.play().then(() => setMusicOn(true)).catch(() => setMusicOn(false)); };
+  useEffect(() => { const timer = window.setTimeout(() => sendYoutubeCommand("playVideo"), 700); return () => window.clearTimeout(timer); }, []);
+  const startMusic = () => { sendYoutubeCommand("unMute"); sendYoutubeCommand("playVideo"); setMusicOn(true); };
   const openInvitation = () => { setOpened(true); startMusic(); window.setTimeout(() => document.getElementById("intro")?.scrollIntoView({ behavior: "smooth" }), 300); };
   const submitEntry = (entry: GuestbookEntry) => { const next = [entry, ...entries]; setEntries(next); try { localStorage.setItem("raka-anjani-guestbook", JSON.stringify(next)); } catch { /* storage is optional */ } };
-  const toggleMusic = () => { if (!audioRef.current) return; if (musicOn) { audioRef.current.pause(); setMusicOn(false); } else { audioRef.current.play().then(() => setMusicOn(true)).catch(() => setMusicOn(false)); } };
+  const toggleMusic = () => { if (musicOn) { sendYoutubeCommand("pauseVideo"); setMusicOn(false); } else { startMusic(); } };
   return <>
-    <audio ref={audioRef} src={CONFIG.ambientTrack} loop preload="none" aria-hidden="true" />
+    <iframe ref={audioRef} className="music-player-frame" src={CONFIG.ambientTrack} title="Musik undangan Raka dan Anjani" allow="autoplay; encrypted-media" onLoad={() => sendYoutubeCommand("playVideo")} tabIndex={-1} />
     {loading && <Preloader onDone={finishLoading} />}
     {!opened && !loading && <Cover guest={guest} onOpen={openInvitation} />}
     {opened && <div className="invitation-page"><Header openMusic={toggleMusic} musicOn={musicOn} /><main><Intro /><Story /><Events /><Countdown /><Gallery onSelect={setLightboxIndex} /><Rsvp onSubmitted={submitEntry} /><Guestbook entries={entries} /><Gift /></main><footer className="site-footer"><Mark light /><p>Terima kasih telah menjadi<br /><em>bagian dari hari kami.</em></p><div><span>{CONFIG.shortNames}</span><span>{CONFIG.dateLabel}</span></div><a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram"><Instagram size={17} /></a></footer><MusicToggle musicOn={musicOn} onToggle={toggleMusic} /><nav className="mobile-bottom-nav" aria-label="Navigasi cepat">{navItems.slice(0, 4).map((item) => <button key={item.id} onClick={() => document.getElementById(item.id)?.scrollIntoView({ behavior: "smooth" })}><span>{item.id === "story" ? "01" : item.id === "events" ? "02" : item.id === "gallery" ? "03" : "04"}</span>{item.label}</button>)}</nav></div>}

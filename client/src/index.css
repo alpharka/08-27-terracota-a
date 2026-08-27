@@ -131,3 +131,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .cover-copy { padding-bottom: 8.5rem; }
   .cover-paper-panel { bottom: 1.25rem; }
 }
+
+
+/* YouTube is used as an audio source only; keep the player out of the visual composition and keyboard flow. */
+.music-player-frame { border: 0; height: 1px; opacity: 0; pointer-events: none; position: fixed; right: -10px; top: -10px; width: 1px; }
+.cover-paper-panel { display: none; }

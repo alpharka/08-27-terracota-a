@@ -136,3 +136,18 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 /* YouTube is used as an audio source only; keep the player out of the visual composition and keyboard flow. */
 .music-player-frame { border: 0; height: 1px; opacity: 0; pointer-events: none; position: fixed; right: -10px; top: -10px; width: 1px; }
 .cover-paper-panel { display: none; }
+
+
+/* REVISION — The opening CTA uses a restrained ink-and-terracotta glow with drifting particles, like a small signal inviting the first click. */
+.open-button { isolation: isolate; overflow: hidden; position: relative; box-shadow: 0 0 0 rgba(223,154,120,0); animation: cta-breathe 2.8s ease-in-out infinite; }
+.open-button::before { background: radial-gradient(circle, rgba(255,238,211,.62) 0, rgba(255,195,156,.22) 35%, transparent 70%); content: ''; height: 130px; left: -20px; opacity: .36; pointer-events: none; position: absolute; top: -50px; transform: translateX(-80px); width: 130px; z-index: 0; animation: cta-glow-sweep 3.2s var(--ease-out) infinite; }
+.open-button::after { background: #fff0dc; border-radius: 50%; box-shadow: 38px 31px 0 -1px rgba(255,236,211,.85), 91px -13px 0 -1px rgba(255,236,211,.72), 145px 38px 0 -2px rgba(255,236,211,.8), 196px -18px 0 -1px rgba(255,236,211,.62); content: ''; height: 3px; opacity: .74; pointer-events: none; position: absolute; right: 16px; top: 8px; width: 3px; z-index: 0; animation: cta-particles 2.6s ease-in-out infinite; }
+.open-button > * { position: relative; z-index: 1; }
+@keyframes cta-breathe { 0%, 100% { box-shadow: 0 0 0 rgba(223,154,120,0); } 50% { box-shadow: 0 0 24px rgba(223,154,120,.3); } }
+@keyframes cta-glow-sweep { 0%, 15% { opacity: 0; transform: translateX(-80px) rotate(12deg); } 35%, 70% { opacity: .46; } 100% { opacity: 0; transform: translateX(240px) rotate(12deg); } }
+@keyframes cta-particles { 0%, 100% { opacity: .25; transform: translate3d(0, 8px, 0) scale(.8); } 50% { opacity: .95; transform: translate3d(-10px, -8px, 0) scale(1.2); } }
+@media (prefers-reduced-motion: reduce) { .open-button { animation: none; box-shadow: none; } .open-button::before, .open-button::after { animation: none; } }
+
+
+/* Direct MP3 player remains visually silent while the floating control exposes its state. */
+.music-player { height: 1px; opacity: 0; pointer-events: none; position: fixed; right: -10px; top: -10px; width: 1px; }
